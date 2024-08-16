@@ -1,4 +1,4 @@
-package org.example.core.nametag;
+package sarah.egirl.yamete.nametag;
 
 import net.labymod.api.Laby;
 import net.labymod.api.client.component.Component;
@@ -9,8 +9,7 @@ import net.labymod.api.client.render.RenderPipeline;
 import net.labymod.api.client.render.draw.RectangleRenderer;
 import net.labymod.api.client.render.font.RenderableComponent;
 import net.labymod.api.client.render.matrix.Stack;
-import org.example.core.listener.WebSocketManager;
-import org.example.core.misc.SlashData;
+import sarah.egirl.yamete.listener.WebSocketManager;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -83,7 +82,7 @@ public class DiscordStatusTag extends NameTag {
 
   @Override
   public float getScale() {
-    return 0.85F;
+    return 0.75F;
   }
 
   @Override

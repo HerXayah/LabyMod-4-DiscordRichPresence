@@ -1,22 +1,19 @@
-package org.example.core;
+package sarah.egirl.yamete;
 
 import net.labymod.api.Laby;
 import net.labymod.api.addon.LabyAddon;
-import net.labymod.api.client.component.Component;
-import net.labymod.api.client.component.format.NamedTextColor;
 import net.labymod.api.client.entity.player.tag.PositionType;
 import net.labymod.api.models.addon.annotation.AddonMain;
-import org.example.core.commands.ExamplePingCommand;
-import org.example.core.listener.WebSocketManager;
-import org.example.core.nametag.DiscordStatusTag;
+import sarah.egirl.yamete.listener.WebSocketManager;
+import sarah.egirl.yamete.nametag.DiscordStatusTag;
 
 @AddonMain
-public class ExampleAddon extends LabyAddon<ExampleConfiguration> {
+public class DiscordRPAddon extends LabyAddon<DiscordRPConfiguration> {
 
-  private static ExampleAddon instance;
+  private static DiscordRPAddon instance;
   private static final WebSocketManager manager = WebSocketManager.getInstance();
 
-  public static ExampleAddon getInstance() {
+  public static DiscordRPAddon getInstance() {
     return instance;
   }
 
@@ -29,7 +26,6 @@ public class ExampleAddon extends LabyAddon<ExampleConfiguration> {
       manager.setIcon();
     });
     this.registerSettingCategory();
-    this.registerCommand(new ExamplePingCommand());
     this.logger().info("Enabled the Addon");
     manager.connect();
     this.labyAPI().tagRegistry().register(
@@ -43,8 +39,8 @@ public class ExampleAddon extends LabyAddon<ExampleConfiguration> {
   }
 
   @Override
-  protected Class<ExampleConfiguration> configurationClass() {
-    return ExampleConfiguration.class;
+  protected Class<DiscordRPConfiguration> configurationClass() {
+    return DiscordRPConfiguration.class;
   }
 
   public String getLatestTypeData() {

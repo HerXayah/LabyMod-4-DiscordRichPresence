@@ -1,7 +1,7 @@
-package org.example.core.misc;
+package sarah.egirl.yamete.misc;
 
-import org.example.core.ExampleAddon;
-import org.example.core.listener.WebSocketManager;
+import sarah.egirl.yamete.DiscordRPAddon;
+import sarah.egirl.yamete.listener.WebSocketManager;
 
 /**
  * @author https://github.com/PrincessAkira (Sarah) Today is the 8/16/2024 @7:04 PM This project is
@@ -13,7 +13,7 @@ public class SlashData {
 
   private static final WebSocketManager manager = WebSocketManager.getInstance();
   private static SlashData instance;
-  private static ExampleAddon addon = ExampleAddon.getInstance();
+  private static DiscordRPAddon addon = DiscordRPAddon.getInstance();
 
 
   public static SlashData getInstance() {

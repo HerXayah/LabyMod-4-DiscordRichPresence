@@ -1,13 +1,11 @@
-package org.example.core.listener;
+package sarah.egirl.yamete.listener;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import net.labymod.api.Laby;
 import net.labymod.api.client.component.Component;
 import net.labymod.api.client.gui.icon.Icon;
-import org.example.core.ExampleAddon;
+import sarah.egirl.yamete.DiscordRPAddon;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import java.util.ArrayList;
@@ -65,7 +63,7 @@ public class WebSocketManager extends WebSocketClient {
   public void onOpen(ServerHandshake handshakedata) {
     System.out.println("opened connection");
     try {
-      this.send("{\"op\": 2, \"d\": {\"subscribe_to_id\": \"" + ExampleAddon.getInstance().configuration().discordID().get() + "\"}}");
+      this.send("{\"op\": 2, \"d\": {\"subscribe_to_id\": \"" + DiscordRPAddon.getInstance().configuration().discordID().get() + "\"}}");
       dataExists = true;
     } catch (Exception e) {
       System.err.println("Error sending message: " + e.getMessage());
