@@ -61,14 +61,12 @@ public class WebSocketManager extends WebSocketClient {
 
   @Override
   public void onOpen(ServerHandshake handshakedata) {
-    System.out.println("opened connection");
     try {
       this.send("{\"op\": 2, \"d\": {\"subscribe_to_id\": \"" + DiscordRPAddon.getInstance().configuration().discordID().get() + "\"}}");
       dataExists = true;
     } catch (Exception e) {
       System.err.println("Error sending message: " + e.getMessage());
     }
-
   }
 
   @Override
@@ -80,13 +78,11 @@ public class WebSocketManager extends WebSocketClient {
   @Override
   public void onClose(int i, String s, boolean b) {
     System.out.println("closed: " + s);
-
   }
 
   @Override
   public void onError(Exception e) {
     System.out.println("error: " + e.getMessage());
-    
   }
 
   public void handleLatestData() {
@@ -143,7 +139,6 @@ public class WebSocketManager extends WebSocketClient {
         for (int i = 0; i < activities.size(); i++) {
           JsonNode activity = activities.get(i);
           if (activity.get("type").asInt() == 1 || activity.get("type").asInt() == 2 || activity.get("type").asInt() == 3) {
-            System.out.println("Removing activity: " + activity.toString());
             ((com.fasterxml.jackson.databind.node.ArrayNode) activities).remove(i);
           }
         }
@@ -166,12 +161,10 @@ public class WebSocketManager extends WebSocketClient {
         } else {
           icon = Icon.url("https://cdn.discordapp.com/app-assets/" + node.get("application_id").asText() + "/" + largeImage + ".png");
         }
-        System.out.println("Icon set to: " + icon.toString());
       } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }
     }
-    System.out.println("Icon set");
   }
 
   public void prepareComponent() {
@@ -183,7 +176,6 @@ public class WebSocketManager extends WebSocketClient {
         String gameState = node.get("state").asText().length() > 30 ? node.get("state").asText().substring(0, 30) + "..." : node.get("state").asText();
         String gameDetails = node.get("details").asText().length() > 30 ? node.get("details").asText().substring(0, 30) + "..." : node.get("details").asText();
         component = Component.text(gameName + " \n " + gameDetails + " \n " + gameState);
-        System.out.println("Component set to: " + component.toString());
       } catch (JsonProcessingException e) {
         throw new RuntimeException(e);
       }

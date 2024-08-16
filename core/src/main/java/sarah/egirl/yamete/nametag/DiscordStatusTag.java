@@ -34,8 +34,6 @@ public class DiscordStatusTag extends NameTag {
       return null;
     }
 
-    Player player = (Player) this.entity;
-
     HorizontalAlignment alignment;
     alignment = HorizontalAlignment.LEFT;
 
@@ -82,7 +80,7 @@ public class DiscordStatusTag extends NameTag {
 
   @Override
   public float getScale() {
-    return 0.75F;
+    return 0.65F;
   }
 
   @Override
