@@ -6,6 +6,18 @@ plugins {
 
 dependencies {
     api(project(":api"))
+        // If you want to use external libraries, you can do that here.
+        // The dependencies that are specified here are loaded into your project but will also
+        // automatically be downloaded by labymod, but only if the repository is public.
+        // If it is private, you have to add and compile the dependency manually.
+        // You have to specify the repository, there are getters for maven central and sonatype, every
+        // other repository has to be specified with their url. Example:
+        // maven(mavenCentral(), "org.apache.httpcomponents:httpclient:4.5.13")
+    maven(mavenCentral(), "org.eclipse.jetty.websocket:websocket-javax-server:10.0.22")
+    maven(mavenCentral(), "com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    maven(mavenCentral(), "org.java-websocket:Java-WebSocket:1.5.7")
+    
+
 }
 
 labyModProcessor {
