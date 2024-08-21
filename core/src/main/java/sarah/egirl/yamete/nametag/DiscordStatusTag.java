@@ -9,6 +9,7 @@ import net.labymod.api.client.render.RenderPipeline;
 import net.labymod.api.client.render.draw.RectangleRenderer;
 import net.labymod.api.client.render.font.RenderableComponent;
 import net.labymod.api.client.render.matrix.Stack;
+import sarah.egirl.yamete.DiscordRPAddon;
 import sarah.egirl.yamete.listener.WebSocketManager;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,6 +40,11 @@ public class DiscordStatusTag extends NameTag {
 
     Component component = manager.component;
     if (component == null) {
+      return null;
+    }
+
+    DiscordRPAddon addon = DiscordRPAddon.getInstance();
+    if (!addon.configuration().enabled().get()) {
       return null;
     }
 

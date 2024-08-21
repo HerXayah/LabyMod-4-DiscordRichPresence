@@ -1,8 +1,11 @@
 {
-  "example": {
+  "yamete": {
     "settings": {
       "enabled": {
         "name": "Enabled"
+      },
+      "discordID": {
+        "name": "Discord ID"
       }
     }
   }
