@@ -20,6 +20,11 @@ public class DiscordRPAddon extends LabyAddon<DiscordRPConfiguration> {
   @Override
   protected void enable() {
     instance = this;
+    if (!configuration().enabled().get()) {
+      manager.removeListener(manager::close);
+      this.logger().info("Disabled the Addon");
+      return;
+    }
     manager.addListener(() -> {
       manager.filterData();
       manager.prepareComponent();
