@@ -6,6 +6,10 @@
       },
       "discordID": {
         "name": "Discord ID"
+      },
+      "button": {
+        "name": "Join this to make this work",
+        "text": "discord.gg/lanyard"
       }
     }
   }

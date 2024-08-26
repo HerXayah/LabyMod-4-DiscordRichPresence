@@ -10,6 +10,7 @@ import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicReference;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,28 +18,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class WebSocketManager extends WebSocketClient {
 
-  private static WebSocketManager instance;
-  public final ObjectMapper objectMapper = new ObjectMapper();
-  public Component component;
-  public boolean dataExists = false;
-  private final List<Runnable> listeners = new ArrayList<>();
-  public Icon icon;
-  public final AtomicReference<String> latestData = new AtomicReference<>();
+  private static volatile WebSocketManager instance;
+  private final ObjectMapper objectMapper = new ObjectMapper();
+  public volatile Component component;
+  private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
+  public volatile Icon icon;
+  private final AtomicReference<String> latestData = new AtomicReference<>();
 
-  public WebSocketManager(URI serverUri) {
+  private WebSocketManager(URI serverUri) {
     super(serverUri);
     System.out.println("WebSocketManager created");
-    if(instance != null) {
-      throw new RuntimeException("WebSocketManager already exists");
+    if (instance != null) {
+      DiscordRPAddon.getInstance().logger().debug("WebSocketManager already created");
     }
   }
 
   public static WebSocketManager getInstance() {
     if (instance == null) {
-      try {
-        instance = new WebSocketManager(new URI("wss://api.lanyard.rest/socket"));
-      } catch (URISyntaxException e) {
-        e.printStackTrace();
+      synchronized (WebSocketManager.class) {
+        if (instance == null) {
+          try {
+            instance = new WebSocketManager(new URI("wss://api.lanyard.rest/socket"));
+          } catch (URISyntaxException e) {
+            DiscordRPAddon.getInstance().logger().debug(e.getMessage());
+          }
+        }
       }
     }
     return instance;
@@ -46,14 +50,13 @@ public class WebSocketManager extends WebSocketClient {
 
   public void addListener(Runnable listener) {
     listeners.add(listener);
-    dataExists = true;
   }
 
   public void removeListener(Runnable listener) {
     listeners.remove(listener);
   }
 
-  private void notifyListeners(String data) {
+  private void notifyListeners() {
     for (Runnable listener : listeners) {
       listener.run();
     }
@@ -63,26 +66,24 @@ public class WebSocketManager extends WebSocketClient {
   public void onOpen(ServerHandshake handshakedata) {
     try {
       this.send("{\"op\": 2, \"d\": {\"subscribe_to_id\": \"" + DiscordRPAddon.getInstance().configuration().discordID().get() + "\"}}");
-      dataExists = true;
     } catch (Exception e) {
-      System.err.println("Error sending message: " + e.getMessage());
+      DiscordRPAddon.getInstance().logger().debug("Error sending message: " + e.getMessage());
     }
   }
 
   @Override
   public void onMessage(String s) {
-    System.out.println("received: " + s);
     handleMessage(s);
   }
 
   @Override
   public void onClose(int i, String s, boolean b) {
-    System.out.println("closed: " + s);
+    DiscordRPAddon.getInstance().logger().debug("Closed Connection");
   }
 
   @Override
   public void onError(Exception e) {
-    System.out.println("error: " + e.getMessage());
+    DiscordRPAddon.getInstance().logger().debug(e.getMessage());
   }
 
   public void handleLatestData() {
@@ -92,68 +93,65 @@ public class WebSocketManager extends WebSocketClient {
     }
   }
 
-  public String getType() {
-    String data = latestData.get();
-    String type = null;
-    if (data != null) {
-      try {
-        JsonNode node = objectMapper.readTree(data);
-        type = node.get("t").asText();
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    return type;
-  }
-
-  private void handleMessage(String data) {
+  private synchronized void handleMessage(String data) {
     try {
       JsonNode node = objectMapper.readTree(data);
       String type = node.get("t").asText();
       if (type.equals("INIT_STATE") || type.equals("PRESENCE_UPDATE")) {
         latestData.set(data);
         filterData();
-        notifyListeners(data);
+        notifyListeners();
       } else {
-        System.out.println("Received unexpected message type: " + type);
+        DiscordRPAddon.getInstance().logger().debug("Received unexpected message type: " + type);
       }
     } catch (Exception e) {
-      System.err.println("Error processing message: " + e.getMessage());
-      e.printStackTrace();
+      DiscordRPAddon.getInstance().logger().debug("Error processing message: " + e.getMessage());
     }
   }
 
-  public String getLatestData() {
-    return latestData.get();
+  public JsonNode getLatestDataAsJsonNode() {
+    String data = latestData.get();
+    if (data != null) {
+      try {
+        return objectMapper.readTree(data);
+      } catch (JsonProcessingException e) {
+        DiscordRPAddon.getInstance().logger().debug(e.getMessage());
+      }
+    }
+    return null;
   }
 
-  public void filterData() {
-    // filter if data.activities[0].type is 1 or 2, remove them from the data array
-    // get all activities in an array
-    // remove all activities with type 1 or 2
+  public synchronized void filterData() {
     String data = latestData.get();
     if (data != null) {
       try {
         JsonNode node = objectMapper.readTree(data);
         JsonNode activities = node.get("d").get("activities");
-        for (int i = 0; i < activities.size(); i++) {
-          JsonNode activity = activities.get(i);
-          if (activity.get("type").asInt() == 1 || activity.get("type").asInt() == 2 || activity.get("type").asInt() == 3) {
-            ((com.fasterxml.jackson.databind.node.ArrayNode) activities).remove(i);
+        if (activities.isArray()) {
+          // Create a new array node to store filtered activities
+          List<JsonNode> filteredActivities = new ArrayList<>();
+          for (JsonNode activity : activities) {
+            int type = activity.get("type").asInt();
+            if (type != 1 && type != 2 && type != 3) {
+              filteredActivities.add(activity);
+            }
           }
+          // Replace the activities node with the filtered activities
+          ((com.fasterxml.jackson.databind.node.ArrayNode) activities).removeAll();
+          ((com.fasterxml.jackson.databind.node.ArrayNode) activities).addAll(filteredActivities);
+          latestData.set(objectMapper.writeValueAsString(node));
         }
-        latestData.set(objectMapper.writeValueAsString(node));
       } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
+        DiscordRPAddon.getInstance().logger().debug(e.getMessage());
       }
     }
   }
 
   public void setIcon() {
-    String activities = getActivities();
-    if (activities != null) {
+    JsonNode activities = getLatestDataAsJsonNode().get("d").get("activities");
+    if (activities != null && activities.isArray() && !activities.isEmpty()) {
       try {
-        JsonNode node = objectMapper.readTree(activities).get(0);
+        JsonNode node = activities.get(0);
         JsonNode assets = node.get("assets");
         String largeImage = assets.get("large_image").asText();
         if (largeImage.startsWith("mp:external")) {
@@ -161,40 +159,34 @@ public class WebSocketManager extends WebSocketClient {
         } else {
           icon = Icon.url("https://cdn.discordapp.com/app-assets/" + node.get("application_id").asText() + "/" + largeImage + ".png");
         }
-      } catch (JsonProcessingException e) {
+      } catch (Exception e) {
         throw new RuntimeException(e);
       }
     }
   }
 
   public void prepareComponent() {
-    String activities = getActivities();
-    if (activities != null) {
+    JsonNode activities = getLatestDataAsJsonNode().get("d").get("activities");
+    if (activities != null && activities.isArray() && !activities.isEmpty()) {
       try {
-        JsonNode node = objectMapper.readTree(activities).get(0);
+        JsonNode node = activities.get(0);
         String gameName = node.get("name").asText();
         String gameState = node.get("state").asText().length() > 30 ? node.get("state").asText().substring(0, 30) + "..." : node.get("state").asText();
         String gameDetails = node.get("details").asText().length() > 30 ? node.get("details").asText().substring(0, 30) + "..." : node.get("details").asText();
         component = Component.text(gameName + " \n " + gameDetails + " \n " + gameState);
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
+      } catch (Exception e) {
+        DiscordRPAddon.getInstance().logger().debug(e.getMessage());
       }
     }
-    System.out.println("Component prepared");
+    DiscordRPAddon.getInstance().logger().debug("Created Component");
   }
 
   public String getActivities() {
-    String data = latestData.get();
-    String activities = null;
+    JsonNode data = getLatestDataAsJsonNode();
     if (data != null) {
-      try {
-        JsonNode node = objectMapper.readTree(data);
-        activities = node.get("d").get("activities").toString();
-      } catch (JsonProcessingException e) {
-        throw new RuntimeException(e);
-      }
+      JsonNode activities = data.get("d").get("activities");
+      return activities != null ? activities.toString() : null;
     }
-    return activities;
+    return null;
   }
 }
-

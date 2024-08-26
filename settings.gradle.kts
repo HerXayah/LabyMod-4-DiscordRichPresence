@@ -1,25 +1,25 @@
-rootProject.name = "laby4-discordrpc"
+    rootProject.name = "laby4-discordrpc"
 
-pluginManagement {
-    val labyGradlePluginVersion = "0.4.6"
-    plugins {
-        id("net.labymod.gradle") version (labyGradlePluginVersion)
-    }
-
-    buildscript {
-        repositories {
-            maven("https://dist.labymod.net/api/v1/maven/release/")
-            maven("https://repo.spongepowered.org/repository/maven-public")
-            mavenCentral()
+    pluginManagement {
+        val labyGradlePluginVersion = "0.4.6"
+        plugins {
+            id("net.labymod.gradle") version (labyGradlePluginVersion)
         }
 
-        dependencies {
-            classpath("net.labymod.gradle", "addon", labyGradlePluginVersion)
+        buildscript {
+            repositories {
+                maven("https://dist.labymod.net/api/v1/maven/release/")
+                maven("https://repo.spongepowered.org/repository/maven-public")
+                mavenCentral()
+            }
+
+            dependencies {
+                classpath("net.labymod.gradle", "addon", labyGradlePluginVersion)
+            }
         }
     }
-}
 
-plugins.apply("net.labymod.gradle")
+    plugins.apply("net.labymod.gradle")
 
-include(":api")
-include(":core")
+    include(":api")
+    include(":core")
